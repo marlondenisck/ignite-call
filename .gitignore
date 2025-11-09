@@ -39,3 +39,8 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+/app/generated/prisma
+prisma/dev.db
+prisma/migrations/20251109193800_init/migration.sql
+prisma/migrations/migration_lock.toml

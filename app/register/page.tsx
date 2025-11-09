@@ -2,9 +2,10 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useQueryState } from 'nuqs'
 import { ArrowRight } from 'phosphor-react'
-import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
+
+import { api } from '@/lib/axios'
 
 const registerFormSchema = z.object({
   username: z
@@ -61,8 +62,19 @@ export default function Register() {
     },
   })
 
-  function handleRegister(data: RegisterFormData) {
-    console.log(data)
+  async function handleRegister(data: RegisterFormData) {
+    try {
+      const response = await api.post('/users', {
+        name: data.name,
+        username: data.username,
+      })
+      console.log('Usuário criado:', response.data)
+    } catch (err) {
+      console.error('Erro ao criar usuário:', err)
+      if (err instanceof Error) {
+        console.error('Mensagem do erro:', err.message)
+      }
+    }
   }
 
   return (
@@ -104,11 +116,17 @@ export default function Register() {
             type='text'
             placeholder='Seu nome'
             className='rounded-md border border-gray-600 bg-gray-900 px-3 py-3 text-white placeholder:text-gray-400 focus:border-green-500 focus:outline-none'
+            {...register('name')}
           />
         </label>
         {errors.username && (
           <span className='pl-1 text-sm text-red-500'>
             {errors.username.message}
+          </span>
+        )}
+        {errors.name && (
+          <span className='pl-1 text-sm text-red-500'>
+            {errors.name.message}
           </span>
         )}
 
