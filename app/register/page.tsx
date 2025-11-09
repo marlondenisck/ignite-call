@@ -1,5 +1,6 @@
 'use client'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { AxiosError } from 'axios'
 import { useQueryState } from 'nuqs'
 import { ArrowRight } from 'phosphor-react'
 import { useForm } from 'react-hook-form'
@@ -71,9 +72,12 @@ export default function Register() {
       console.log('Usuário criado:', response.data)
     } catch (err) {
       console.error('Erro ao criar usuário:', err)
-      if (err instanceof Error) {
-        console.error('Mensagem do erro:', err.message)
+      if (err instanceof AxiosError && err?.response?.data?.message) {
+        console.log(err.response.data.message)
+        return
       }
+
+      console.error(err)
     }
   }
 

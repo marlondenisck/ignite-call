@@ -1,8 +1,20 @@
+import { cookies } from 'next/headers'
+
 import { prisma } from '@/lib/prisma'
 
 export async function POST(request: Request) {
   try {
     const { name, username } = await request.json()
+
+    const userExists = await prisma.user.findUnique({
+      where: {
+        username,
+      },
+    })
+
+    if (userExists) {
+      return Response.json({ status: 400, message: 'Username já existe.' })
+    }
 
     console.log('Dados recebidos:', { name, username })
 
@@ -11,6 +23,15 @@ export async function POST(request: Request) {
         name,
         username,
       },
+    })
+
+    const cookieStore = await cookies()
+    cookieStore.set('ignite-call:userId', user.id, {
+      maxAge: 60 * 60 * 24 * 7, // 7 days
+      path: '/',
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
     })
 
     console.log('Usuário criado:', user)
