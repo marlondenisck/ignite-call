@@ -1,11 +1,13 @@
 'use client'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { AxiosError } from 'axios'
+import { useRouter } from 'next/navigation'
 import { useQueryState } from 'nuqs'
 import { ArrowRight } from 'phosphor-react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 
+import { MultiStep } from '@/app/components/MultiStep'
 import { api } from '@/lib/axios'
 
 const registerFormSchema = z.object({
@@ -23,32 +25,8 @@ const registerFormSchema = z.object({
 
 type RegisterFormData = z.infer<typeof registerFormSchema>
 
-// Componente MultiStep simples
-function MultiStep({
-  size,
-  currentStep,
-}: {
-  size: number
-  currentStep: number
-}) {
-  return (
-    <div className='flex items-center gap-2'>
-      {Array.from({ length: size }, (_, i) => (
-        <div
-          key={i}
-          className={`h-1 flex-1 rounded-full ${
-            i + 1 <= currentStep ? 'bg-gray-100' : 'bg-gray-600'
-          }`}
-        />
-      ))}
-      <span className='ml-2 text-xs text-gray-200'>
-        Passo {currentStep} de {size}
-      </span>
-    </div>
-  )
-}
-
 export default function Register() {
+  const router = useRouter()
   const [username] = useQueryState('username') // Pega automaticamente da URL
 
   const {
@@ -70,6 +48,7 @@ export default function Register() {
         username: data.username,
       })
       console.log('Usuário criado:', response.data)
+      await router.push('/register/connect-calendar')
     } catch (err) {
       console.error('Erro ao criar usuário:', err)
       if (err instanceof AxiosError && err?.response?.data?.message) {
