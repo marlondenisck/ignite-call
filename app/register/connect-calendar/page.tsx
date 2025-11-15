@@ -1,10 +1,13 @@
 'use client'
 
+import { signIn, useSession } from 'next-auth/react'
 import { ArrowRight } from 'phosphor-react'
 
 import { MultiStep } from '@/app/components/MultiStep'
 
 export default function ConnectCalendar() {
+  const session = useSession()
+  console.log(session)
   // async function handleRegister() {
 
   // }
@@ -32,6 +35,7 @@ export default function ConnectCalendar() {
           <button
             type='button'
             className='group flex items-center gap-2 rounded-md border border-green-600 bg-transparent px-4 py-2 text-sm font-medium text-green-600 transition-colors hover:border-green-300 hover:bg-green-700 hover:text-gray-100 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-green-900 focus:outline-none'
+            onClick={() => signIn('google')}
           >
             Conectar
             <ArrowRight
