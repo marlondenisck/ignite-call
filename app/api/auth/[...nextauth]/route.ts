@@ -22,6 +22,7 @@ export const authOptions: NextAuthOptions = {
           username: '',
           email: profile.email,
           avatar_url: profile.picture,
+          image: profile.picture,
         }
       },
     }),
@@ -40,7 +41,12 @@ export const authOptions: NextAuthOptions = {
     async session({ session, user }) {
       return {
         ...session,
-        user,
+        user: {
+          ...session.user,
+          id: user.id,
+          username: user.username,
+          avatar_url: user.avatar_url,
+        },
       }
     },
   },
