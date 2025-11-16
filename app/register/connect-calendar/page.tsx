@@ -9,6 +9,7 @@ import { MultiStep } from '@/app/components/MultiStep'
 
 export default function ConnectCalendar() {
   const session = useSession()
+  console.log('Session status:', session)
   const searchParams = useSearchParams()
   const router = useRouter()
 
