@@ -1,7 +1,7 @@
 'use client'
 
 import { ArrowRight } from 'phosphor-react'
-import { useFieldArray, useForm } from 'react-hook-form'
+import { Controller, useFieldArray, useForm } from 'react-hook-form'
 import { z } from 'zod'
 
 import { MultiStep } from '@/app/components/MultiStep'
@@ -14,6 +14,7 @@ export default function TimeIntervals() {
     register,
     handleSubmit,
     control,
+    watch,
     formState: { isSubmitting, errors },
   } = useForm({
     defaultValues: {
@@ -35,6 +36,8 @@ export default function TimeIntervals() {
     control,
     name: 'intervals',
   })
+
+  const intervals = watch('intervals')
 
   async function handleSetTimeIntervals() {}
 
@@ -66,25 +69,40 @@ export default function TimeIntervals() {
               {/* Interval Item - Segunda-feira */}
               <div className='flex items-center justify-between px-4 py-3'>
                 <div className='flex items-center gap-3'>
-                  <input
-                    type='checkbox'
-                    className='h-5 w-5 cursor-pointer appearance-none rounded border-2 border-gray-600 bg-gray-900 checked:border-green-600 checked:bg-green-600 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-gray-800'
+                  <Controller
+                    name={`intervals.${index}.enabled`}
+                    control={control}
+                    render={({ field }) => {
+                      return (
+                        <input
+                          type='checkbox'
+                          onChange={(e) =>
+                            field.onChange(e.target.checked === true)
+                          }
+                          checked={field.value}
+                          className='h-5 w-5 cursor-pointer appearance-none rounded border-2 border-gray-600 bg-gray-900 checked:border-green-600 checked:bg-green-600 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-gray-800'
+                        />
+                      )
+                    }}
                   />
                   <span className='text-gray-100'>
                     {weekDays[field.weekDay]}
                   </span>
                 </div>
+
                 <div className='flex items-center gap-2'>
                   <input
                     type='time'
                     step={60}
                     className='h-10 w-auto rounded-md border border-gray-600 bg-gray-900 px-3 text-sm text-gray-100 focus:border-green-500 focus:ring-2 focus:ring-green-500 [&::-webkit-calendar-picker-indicator]:brightness-40 [&::-webkit-calendar-picker-indicator]:invert-100'
+                    disabled={intervals[index].enabled === false}
                     {...register(`intervals.${index}.startTime`)}
                   />
                   <input
                     type='time'
                     step={60}
                     className='h-10 w-auto rounded-md border border-gray-600 bg-gray-900 px-3 text-sm text-gray-100 focus:border-green-500 focus:ring-2 focus:ring-green-500 [&::-webkit-calendar-picker-indicator]:brightness-40 [&::-webkit-calendar-picker-indicator]:invert-100'
+                    disabled={intervals[index].enabled === false}
                     {...register(`intervals.${index}.endTime`)}
                   />
                 </div>
