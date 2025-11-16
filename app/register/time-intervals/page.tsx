@@ -1,6 +1,7 @@
 'use client'
 
 import { zodResolver } from '@hookform/resolvers/zod'
+import { useRouter } from 'next/navigation'
 import { ArrowRight } from 'phosphor-react'
 import { useEffect } from 'react'
 import { Controller, useFieldArray, useForm } from 'react-hook-form'
@@ -25,22 +26,17 @@ const timeIntervalsFormSchema = z.object({
     .refine((intervals) => intervals.some((interval) => interval.enabled), {
       message: 'Você precisa selecionar pelo menos um dia da semana',
     })
-    .transform((intervals) => intervals.filter((interval) => interval.enabled))
-    .transform((intervals) => {
-      return intervals.map((interval) => {
-        return {
-          weekDay: interval.weekDay,
-          startTimeInMinutes: convertTimeStringToMinutes(interval.startTime),
-          endTimeInMinutes: convertTimeStringToMinutes(interval.endTime),
-        }
-      })
-    })
     .refine(
       (intervals) => {
-        return intervals.every(
-          (interval) =>
-            interval.endTimeInMinutes - 60 >= interval.startTimeInMinutes
-        )
+        return intervals
+          .filter((interval) => interval.enabled)
+          .every((interval) => {
+            const startInMinutes = convertTimeStringToMinutes(
+              interval.startTime
+            )
+            const endInMinutes = convertTimeStringToMinutes(interval.endTime)
+            return endInMinutes - 60 >= startInMinutes
+          })
       },
       {
         message:
@@ -49,8 +45,7 @@ const timeIntervalsFormSchema = z.object({
     ),
 })
 
-type TimeIntervalsFormInput = z.input<typeof timeIntervalsFormSchema>
-type TimeIntervalsFormOutput = z.output<typeof timeIntervalsFormSchema>
+type TimeIntervalsFormInput = z.infer<typeof timeIntervalsFormSchema>
 
 function convertMinutesToTimeString(minutes: number): string {
   const hours = Math.floor(minutes / 60)
@@ -59,6 +54,7 @@ function convertMinutesToTimeString(minutes: number): string {
 }
 
 export default function TimeIntervals() {
+  const router = useRouter()
   const {
     register,
     handleSubmit,
@@ -141,10 +137,21 @@ export default function TimeIntervals() {
   const intervals = watch('intervals')
 
   async function handleSetTimeIntervals(data: TimeIntervalsFormInput) {
-    const formOutput = timeIntervalsFormSchema.parse(data)
+    // Remove validação manual - o zodResolver já faz isso
+    // Os dados aqui são do tipo Input (antes das transformações)
+    // Precisamos filtrar manualmente os habilitados e converter para minutos
+    const enabledIntervals = data.intervals
+      .filter((interval) => interval.enabled)
+      .map((interval) => ({
+        weekDay: interval.weekDay,
+        startTimeInMinutes: convertTimeStringToMinutes(interval.startTime),
+        endTimeInMinutes: convertTimeStringToMinutes(interval.endTime),
+      }))
+
     await api.post('/users/time-intervals', {
-      intervals: formOutput.intervals,
+      intervals: enabledIntervals,
     })
+    router.push('/register/update-profile')
   }
 
   return (
