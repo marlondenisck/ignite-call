@@ -1,5 +1,6 @@
 'use client'
 
+import { zodResolver } from '@hookform/resolvers/zod'
 import { ArrowRight } from 'phosphor-react'
 import { Controller, useFieldArray, useForm } from 'react-hook-form'
 import { z } from 'zod'
@@ -7,7 +8,24 @@ import { z } from 'zod'
 import { MultiStep } from '@/app/components/MultiStep'
 import { getWeekDays } from '@/utils/get-week-days'
 
-const timeIntervalsFormSchema = z.object({})
+const timeIntervalsFormSchema = z.object({
+  intervals: z
+    .array(
+      z.object({
+        weekDay: z.number().min(0).max(6),
+        enabled: z.boolean(),
+        startTime: z.string(),
+        endTime: z.string(),
+      })
+    )
+    .length(7)
+    .refine((intervals) => intervals.some((interval) => interval.enabled), {
+      message: 'Você precisa selecionar pelo menos um dia da semana',
+    })
+    .transform((intervals) => intervals.filter((interval) => interval.enabled)),
+})
+
+type TimeIntervalsFormData = z.infer<typeof timeIntervalsFormSchema>
 
 export default function TimeIntervals() {
   const {
@@ -17,6 +35,7 @@ export default function TimeIntervals() {
     watch,
     formState: { isSubmitting, errors },
   } = useForm({
+    resolver: zodResolver(timeIntervalsFormSchema),
     defaultValues: {
       intervals: [
         { weekDay: 0, enabled: false, startTime: '08:00', endTime: '18:00' },
@@ -39,7 +58,9 @@ export default function TimeIntervals() {
 
   const intervals = watch('intervals')
 
-  async function handleSetTimeIntervals() {}
+  async function handleSetTimeIntervals(data: TimeIntervalsFormData) {
+    console.log(data)
+  }
 
   return (
     <main className='mx-auto max-w-[572px] px-4 py-20'>
@@ -111,10 +132,17 @@ export default function TimeIntervals() {
           )
         })}
 
+        {errors.intervals && (
+          <p className='mb-4 text-sm text-red-400'>
+            {errors.intervals.root?.message || errors.intervals.message}
+          </p>
+        )}
+
         {/* Submit Button */}
         <button
           type='submit'
-          className='flex items-center justify-center gap-2 rounded-md bg-green-600 px-6 py-3 font-medium text-white transition-colors hover:bg-green-500 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-gray-900 focus:outline-none'
+          disabled={isSubmitting}
+          className='flex items-center justify-center gap-2 rounded-md bg-green-600 px-6 py-3 font-medium text-white transition-colors hover:bg-green-500 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-gray-900 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50'
         >
           Próximo passo
           <ArrowRight size={16} />
