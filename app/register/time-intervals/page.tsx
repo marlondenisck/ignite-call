@@ -68,7 +68,7 @@ export default function TimeIntervals() {
                 <div className='flex items-center gap-3'>
                   <input
                     type='checkbox'
-                    className='h-5 w-5 rounded border-gray-600 bg-gray-900 text-green-600 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-gray-800'
+                    className='h-5 w-5 cursor-pointer appearance-none rounded border-2 border-gray-600 bg-gray-900 checked:border-green-600 checked:bg-green-600 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-gray-800'
                   />
                   <span className='text-gray-100'>
                     {weekDays[field.weekDay]}
