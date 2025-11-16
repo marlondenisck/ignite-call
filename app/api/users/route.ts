@@ -26,7 +26,7 @@ export async function POST(request: Request) {
     })
 
     const cookieStore = await cookies()
-    cookieStore.set('ignite-call:userId', user.id, {
+    cookieStore.set('@ignitecall:userId', user.id, {
       maxAge: 60 * 60 * 24 * 7, // 7 days
       path: '/',
       httpOnly: true,
