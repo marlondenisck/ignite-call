@@ -2,10 +2,12 @@
 
 import { zodResolver } from '@hookform/resolvers/zod'
 import { ArrowRight } from 'phosphor-react'
+import { useEffect } from 'react'
 import { Controller, useFieldArray, useForm } from 'react-hook-form'
 import { z } from 'zod'
 
 import { MultiStep } from '@/app/components/MultiStep'
+import { api } from '@/lib/axios'
 import { convertTimeStringToMinutes } from '@/utils/convert-time-string-to-minutes'
 import { getWeekDays } from '@/utils/get-week-days'
 
@@ -50,12 +52,19 @@ const timeIntervalsFormSchema = z.object({
 type TimeIntervalsFormInput = z.input<typeof timeIntervalsFormSchema>
 type TimeIntervalsFormOutput = z.output<typeof timeIntervalsFormSchema>
 
+function convertMinutesToTimeString(minutes: number): string {
+  const hours = Math.floor(minutes / 60)
+  const mins = minutes % 60
+  return `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}`
+}
+
 export default function TimeIntervals() {
   const {
     register,
     handleSubmit,
     control,
     watch,
+    reset,
     formState: { isSubmitting, errors },
   } = useForm<TimeIntervalsFormInput>({
     resolver: zodResolver(timeIntervalsFormSchema),
@@ -72,6 +81,56 @@ export default function TimeIntervals() {
     },
   })
 
+  useEffect(() => {
+    async function loadTimeIntervals() {
+      try {
+        const response = await api.get('/users/time-intervals')
+        const { intervals } = response.data
+
+        if (intervals && intervals.length > 0) {
+          // Se houver dados no banco, preenche o formulário
+          const defaultIntervals = Array.from({ length: 7 }, (_, index) => {
+            const savedInterval = intervals.find(
+              (interval: {
+                week_day: number
+                time_start_in_minutes: number
+                time_end_in_minutes: number
+              }) => interval.week_day === index
+            )
+
+            if (savedInterval) {
+              return {
+                weekDay: index,
+                enabled: true,
+                startTime: convertMinutesToTimeString(
+                  savedInterval.time_start_in_minutes
+                ),
+                endTime: convertMinutesToTimeString(
+                  savedInterval.time_end_in_minutes
+                ),
+              }
+            }
+
+            return {
+              weekDay: index,
+              enabled: false,
+              startTime: '08:00',
+              endTime: '18:00',
+            }
+          })
+
+          reset({ intervals: defaultIntervals })
+        }
+        // Se não houver dados, mantém os defaultValues (segunda a sexta)
+      } catch (error) {
+        console.error('Erro ao carregar intervalos:', error)
+        // Mantém os defaultValues em caso de erro
+      }
+    }
+
+    loadTimeIntervals()
+  }, [reset])
+
   const weekDays = getWeekDays()
 
   const { fields } = useFieldArray({
@@ -81,10 +140,11 @@ export default function TimeIntervals() {
 
   const intervals = watch('intervals')
 
-  async function handleSetTimeIntervals(data: any) {
-    const formData = data as TimeIntervalsFormOutput
-
-    console.log(formData)
+  async function handleSetTimeIntervals(data: TimeIntervalsFormInput) {
+    const formOutput = timeIntervalsFormSchema.parse(data)
+    await api.post('/users/time-intervals', {
+      intervals: formOutput.intervals,
+    })
   }
 
   return (
