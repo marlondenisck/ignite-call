@@ -41,6 +41,14 @@ export async function POST(request: Request) {
   const body = await request.json()
   const { intervals } = timeIntervalsBodySchema.parse(body)
 
+  // Deleta todos os intervalos existentes do usuário
+  await prisma.userTimeInterval.deleteMany({
+    where: {
+      user_id: session.user?.id,
+    },
+  })
+
+  // Cria os novos intervalos
   await Promise.all(
     intervals.map((interval) => {
       return prisma.userTimeInterval.create({

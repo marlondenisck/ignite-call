@@ -27,6 +27,10 @@ export default function ConnectCalendar() {
     await signIn('google')
   }
 
+  async function handleNavigateToNextStep() {
+    await router.push('/register/time-intervals')
+  }
+
   return (
     <main className='mx-auto max-w-[572px] px-4 py-20'>
       {/* Header */}
@@ -81,7 +85,7 @@ export default function ConnectCalendar() {
           type='submit'
           disabled={!isSignedIn}
           className='mt-2 flex items-center justify-center gap-2 rounded-md bg-green-600 px-6 py-3 font-medium text-white transition-colors hover:bg-green-500 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-gray-900 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50'
-          onClick={() => router.push('/register/time-intervals')}
+          onClick={handleNavigateToNextStep}
         >
           Próximo passo
           <ArrowRight size={16} />
