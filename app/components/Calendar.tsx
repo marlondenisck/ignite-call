@@ -1,7 +1,9 @@
 'use client'
 
 import { CaretLeft, CaretRight } from 'phosphor-react'
+import { useState } from 'react'
 
+import dayjs from '@/lib/dayjs'
 import { getWeekDays } from '@/utils/get-week-days'
 
 interface CalendarDayProps {
@@ -25,21 +27,43 @@ function CalendarDay({ children, disabled }: CalendarDayProps) {
 }
 
 export function Calendar() {
+const [currentDate, setCurrentDate] = useState(() => {
+    return dayjs().set('date', 1)
+  })
+
+  function handlePreviousMonth() {
+    const previousMonth = currentDate.subtract(1, 'month')
+
+    setCurrentDate(previousMonth)
+  }
+
+  function handleNextMonth() {
+    const nextMonth = currentDate.add(1, 'month')
+
+    setCurrentDate(nextMonth)
+  }
+
   const shortWeekDays = getWeekDays({ short: true })
 
+  const currentMonth = currentDate.format('MMMM')
+  const currentYear = currentDate.format('YYYY')
   return (
     <div className='flex flex-col gap-6 p-6'>
       {/* Calendar Header */}
       <div className='flex items-center justify-between'>
-        <h2 className='font-medium text-white'>
-          Dezembro <span className='text-gray-200'>2022</span>
+        <h2 className='font-medium text-white capitalize'>
+          {currentMonth} <span className='text-gray-200'>{currentYear}</span>
         </h2>
 
         <div className='flex gap-2 text-gray-200'>
-          <button className='flex h-5 w-5 cursor-pointer items-center justify-center rounded-sm leading-none hover:text-gray-100 focus:shadow-[0_0_0_2px_#e1e1e6]'>
+          <button 
+            onClick={handlePreviousMonth}
+            className='flex h-5 w-5 cursor-pointer items-center justify-center rounded-sm leading-none hover:text-gray-100 focus:shadow-[0_0_0_2px_#e1e1e6]'>
             <CaretLeft className='h-5 w-5' />
           </button>
-          <button className='flex h-5 w-5 cursor-pointer items-center justify-center rounded-sm leading-none hover:text-gray-100 focus:shadow-[0_0_0_2px_#e1e1e6]'>
+          <button 
+            onClick={handleNextMonth}
+            className='flex h-5 w-5 cursor-pointer items-center justify-center rounded-sm leading-none hover:text-gray-100 focus:shadow-[0_0_0_2px_#e1e1e6]'>
             <CaretRight className='h-5 w-5' />
           </button>
         </div>
