@@ -9,12 +9,15 @@ import { getWeekDays } from '@/utils/get-week-days'
 interface CalendarDayProps {
   children: React.ReactNode
   disabled?: boolean
+  onDateSelected: (date: Date) => void
+  date: dayjs.Dayjs
 }
 
-function CalendarDay({ children, disabled }: CalendarDayProps) {
+function CalendarDay({ children, disabled, onDateSelected, date }: CalendarDayProps) {
   return (
     <button
       disabled={disabled}
+      onClick={() => onDateSelected(date.toDate())}
       className={`aspect-square w-10 h-10 mx-auto rounded-md text-center leading-none ${
         disabled
           ? 'cursor-default opacity-40'
@@ -26,9 +29,15 @@ function CalendarDay({ children, disabled }: CalendarDayProps) {
   )
 }
 
-export function Calendar() {
-const [currentDate, setCurrentDate] = useState(() => {
-    return dayjs().set('date', 1)
+interface CalendarProps {
+  selectedDate: Date | null
+  onDateSelected: (date: Date) => void
+}
+
+export function Calendar({ selectedDate, onDateSelected }: CalendarProps) {
+    
+  const [currentDate, setCurrentDate] = useState(() => {
+      return dayjs().set('date', 1)
   })
 
   function handlePreviousMonth() {
@@ -144,7 +153,7 @@ const [currentDate, setCurrentDate] = useState(() => {
                 {week.map(({ date, disabled }) => {
                   return (
                     <td key={date.toString()}>
-                      <CalendarDay disabled={disabled}>
+                      <CalendarDay disabled={disabled} onDateSelected={onDateSelected} date={date}>
                         {date.get('date')}
                       </CalendarDay>
                     </td>

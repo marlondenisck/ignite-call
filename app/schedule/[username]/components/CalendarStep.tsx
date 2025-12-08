@@ -1,7 +1,12 @@
+'use client'
+import { useState } from 'react'
+
 import { Calendar } from '@/app/components/Calendar'
 
 export function CalendarStep() {
-  const isDateSelected = false
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null)
+
+  const isDateSelected = !!selectedDate
 
   return (
     <div 
@@ -11,7 +16,7 @@ export function CalendarStep() {
           : 'w-[540px] grid-cols-1'
       }`}
     >
-      <Calendar />
+      <Calendar selectedDate={selectedDate} onDateSelected={setSelectedDate}  />
 
       {isDateSelected && (
         <div className='absolute bottom-0 right-0 top-0 w-[280px] overflow-y-scroll border-l border-gray-600 px-6 pt-6'>
