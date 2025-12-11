@@ -41,7 +41,21 @@ export async function GET(
       )
     })
 
-    return Response.json({ blockedWeekDays })
+    const yearMonth = `${year}-${String(month).padStart(2, '0')}`
+
+    const blockedDatesRaw = await prisma.$queryRaw<Array<{ date: Date }>>`
+      SELECT date
+      FROM schedulings
+      WHERE user_id = ${user.id}
+        AND DATE_FORMAT(date, "%Y-%m") = ${yearMonth}
+    `
+
+    const blockedDates = blockedDatesRaw.map((item) => {
+      return item.date.getDate()
+    })
+
+    return Response.json({ blockedWeekDays, blockedDates })
+
   } catch (error) {
     console.error('Error in blocked-dates API:', error)
     return Response.json(

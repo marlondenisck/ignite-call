@@ -18,6 +18,7 @@ interface CalendarDayProps {
 
 interface BlockedDates {
   blockedWeekDays: number[]
+  blockedDates: number[]
 }
 
 function CalendarDay({ children, disabled, onDateSelected, date }: CalendarDayProps) {
@@ -84,6 +85,9 @@ export function Calendar({ selectedDate, onDateSelected }: CalendarProps) {
 
 
   const calendarWeeks = useMemo(() => {
+    if (!blockedDates) {
+      return []
+    }
     const daysInMonthArray = Array.from({
       length: currentDate.daysInMonth(),
     }).map((_, i) => {
@@ -118,7 +122,8 @@ export function Calendar({ selectedDate, onDateSelected }: CalendarProps) {
           date,
           disabled:
             date.endOf('day').isBefore(new Date()) ||
-            (blockedDates?.blockedWeekDays.includes(date.get('day')) ?? false),
+            (blockedDates?.blockedWeekDays.includes(date.get('day')) ?? false) ||
+            (blockedDates?.blockedDates.includes(date.get('date')) ?? false),
         }
       }),
       ...nextMonthFillArray.map((date) => {

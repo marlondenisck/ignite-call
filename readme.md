@@ -10,6 +10,9 @@ Comando pra rodar a migration: `npx prisma migrate dev`
 
 Comando pra rodar o Prisma Studio: `npx prisma studio`
 
+
+Comando utilizado para rodar o Docker: `docker run --name mysql -e MYSQL_ROOT_PASSWORD=docker -p 3306:3306 mysql:latest`
+
 ## NextAuth
 
 Comando pra rodar o gerar um hash para ser colocado no env Auth: `openssl rand -base64 32`
