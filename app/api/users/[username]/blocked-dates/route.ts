@@ -43,16 +43,23 @@ export async function GET(
 
     const yearMonth = `${year}-${String(month).padStart(2, '0')}`
 
-    const blockedDatesRaw = await prisma.$queryRaw<Array<{ date: Date }>>`
-      SELECT date
-      FROM schedulings
-      WHERE user_id = ${user.id}
-        AND DATE_FORMAT(date, "%Y-%m") = ${yearMonth}
+    const blockedDatesRaw: Array<{ date: number }> = await prisma.$queryRaw`
+      SELECT
+        EXTRACT(DAY FROM S.date) AS date,
+        COUNT(S.date) AS amount,
+        ((UTI.time_end_in_minutes - UTI.time_start_in_minutes) / 60) AS size
+      FROM schedulings S
+      LEFT JOIN user_time_intervals UTI
+        ON UTI.week_day = WEEKDAY(DATE_ADD(S.date, INTERVAL 1 DAY))
+        AND UTI.user_id = ${user.id}
+      WHERE S.user_id = ${user.id}
+        AND DATE_FORMAT(S.date, "%Y-%m") = ${yearMonth}
+      GROUP BY EXTRACT(DAY FROM S.date),
+        ((UTI.time_end_in_minutes - UTI.time_start_in_minutes) / 60)
+      HAVING amount >= size
     `
 
-    const blockedDates = blockedDatesRaw.map((item) => {
-      return item.date.getDate()
-    })
+    const blockedDates = blockedDatesRaw.map((item) => item.date)
 
     return Response.json({ blockedWeekDays, blockedDates })
 
