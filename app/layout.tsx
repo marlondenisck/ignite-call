@@ -5,7 +5,7 @@ import type { Metadata } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
 import { NuqsAdapter } from 'nuqs/adapters/next/app'
 
-import { Providers } from '../lib/providers'
+import { Providers } from '@/lib/providers'
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
