@@ -1,7 +1,9 @@
+import { google } from 'googleapis'
 import { NextRequest } from 'next/server'
 import { z } from 'zod'
 
 import dayjs from '@/lib/dayjs'
+import { getGoogleOAuthToken } from '@/lib/google'
 import { prisma } from '@/lib/prisma'
 
 export async function POST(
@@ -53,7 +55,7 @@ export async function POST(
       }, { status: 400 })
     }
 
-    await prisma.scheduling.create({
+    const scheduling = await prisma.scheduling.create({
       data: {
         name,
         email,
@@ -62,6 +64,41 @@ export async function POST(
         user_id: user.id,
       },
     })
+
+    try {
+      const calendar = google.calendar({
+        version: 'v3',
+        auth: await getGoogleOAuthToken(user.id),
+      })
+
+      await calendar.events.insert({
+        calendarId: 'primary',
+        conferenceDataVersion: 1,
+        requestBody: {
+          summary: `Ignite Call: ${name}`,
+          description: observations,
+          start: {
+            dateTime: schedulingDate.utc().format(),
+          },
+          end: {
+            dateTime: schedulingDate.add(1, 'hour').utc().format(),
+          },
+          attendees: [{ email, displayName: name }],
+          conferenceData: {
+            createRequest: {
+              requestId: scheduling.id,
+              conferenceSolutionKey: {
+                type: 'hangoutsMeet',
+              },
+            },
+          },
+        },
+      })
+    } catch (googleError) {
+      console.error('Erro ao criar evento no Google Calendar:', googleError)
+      // Não falhamos a requisição se o Google Calendar falhar
+      // O agendamento já foi salvo no banco
+    }
 
     return Response.json({ message: 'Scheduling created successfully.' }, { status: 201 })
 

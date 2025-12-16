@@ -13,7 +13,7 @@ import { api } from '@/lib/axios'
 const confirmFormSchema = z.object({
   name: z.string().min(3, { message: 'O nome precisa no mínimo 3 caracteres' }),
   email: z.string().email({ message: 'Digite um e-mail válido' }),
-  observations: z.string().nullable(),
+  observations: z.string().optional(),
 })
 
 type ConfirmFormData = z.infer<typeof confirmFormSchema>
@@ -41,6 +41,11 @@ export function ConfirmStep({
     formState: { isSubmitting, errors },
   } = useForm<ConfirmFormData>({
     resolver: zodResolver(confirmFormSchema),
+    defaultValues: {
+      name: '',
+      email: '',
+      observations: '',
+    },
   })
 
   const params = useParams()
@@ -51,12 +56,17 @@ export function ConfirmStep({
     mutationFn: async (data: ConfirmFormData) => {
       const { name, email, observations } = data
 
-      await api.post(`/users/${username}/schedule`, {
+      // Converte para timezone de Cuiabá antes de enviar
+      const schedulingDateCuiaba = dayjs(schedulingDate).tz('America/Cuiaba')
+
+      const response = await api.post(`/users/${username}/schedule`, {
         name,
         email,
-        observations,
-        date: schedulingDate.toISOString(),
+        observations: observations || '',
+        date: schedulingDateCuiaba.toISOString(),
       })
+
+      return response.data
     },
     onSuccess: () => {
       // Invalida o cache das queries de availability e blocked-dates
@@ -75,10 +85,17 @@ export function ConfirmStep({
       
       onCancelConfirmation()
     },
+    onError: (error) => {
+      console.error('Erro ao criar agendamento:', error)
+    },
   })
 
   async function handleConfirmScheduling(data: ConfirmFormData) {
-    await createSchedulingMutation.mutateAsync(data)
+    try {
+      await createSchedulingMutation.mutateAsync(data)
+    } catch (error) {
+      console.error('Erro no formulário:', error)
+    }
   }
 
   const describedDate = dayjs(schedulingDate).format('DD[ de ]MMMM[ de ]YYYY')
