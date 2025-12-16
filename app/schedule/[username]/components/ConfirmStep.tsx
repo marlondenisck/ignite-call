@@ -1,10 +1,14 @@
 'use client'
 
 import { zodResolver } from '@hookform/resolvers/zod'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import dayjs from 'dayjs'
+import { useParams } from 'next/navigation'
 import { CalendarBlank, Clock } from 'phosphor-react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
+
+import { api } from '@/lib/axios'
 
 const confirmFormSchema = z.object({
   name: z.string().min(3, { message: 'O nome precisa no mínimo 3 caracteres' }),
@@ -39,8 +43,42 @@ export function ConfirmStep({
     resolver: zodResolver(confirmFormSchema),
   })
 
-  function handleConfirmScheduling(data: ConfirmFormData) {
-    console.log(data)
+  const params = useParams()
+  const username = String(params.username)
+  const queryClient = useQueryClient()
+
+  const createSchedulingMutation = useMutation({
+    mutationFn: async (data: ConfirmFormData) => {
+      const { name, email, observations } = data
+
+      await api.post(`/users/${username}/schedule`, {
+        name,
+        email,
+        observations,
+        date: schedulingDate.toISOString(),
+      })
+    },
+    onSuccess: () => {
+      // Invalida o cache das queries de availability e blocked-dates
+      const schedulingDay = dayjs(schedulingDate)
+      const dateFormatted = schedulingDay.format('YYYY-MM-DD')
+      
+      // Invalida availability para a data específica
+      queryClient.invalidateQueries({
+        queryKey: ['availability', dateFormatted]
+      })
+      
+      // Invalida blocked-dates para o mês
+      queryClient.invalidateQueries({
+        queryKey: ['blocked-dates', schedulingDay.get('year'), schedulingDay.get('month')]
+      })
+      
+      onCancelConfirmation()
+    },
+  })
+
+  async function handleConfirmScheduling(data: ConfirmFormData) {
+    await createSchedulingMutation.mutateAsync(data)
   }
 
   const describedDate = dayjs(schedulingDate).format('DD[ de ]MMMM[ de ]YYYY')
@@ -105,10 +143,11 @@ export function ConfirmStep({
           Cancelar
         </button>
         <button 
-          type='submit' disabled={isSubmitting}
-          className='px-6 py-3 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors'
+          type='submit' 
+          disabled={isSubmitting || createSchedulingMutation.isPending}
+          className='px-6 py-3 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed'
         >
-          Confirmar
+          {createSchedulingMutation.isPending ? 'Confirmando...' : 'Confirmar'}
         </button>
       </div>
     </form>
