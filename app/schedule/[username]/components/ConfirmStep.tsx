@@ -1,6 +1,7 @@
 'use client'
 
 import { zodResolver } from '@hookform/resolvers/zod'
+import dayjs from 'dayjs'
 import { CalendarBlank, Clock } from 'phosphor-react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
@@ -21,7 +22,15 @@ const FormError = ({ children }: { children: React.ReactNode }) => {
   )
 }
 
-export function ConfirmStep() {
+interface ConfirmStepProps {
+  schedulingDate: Date
+  onCancelConfirmation: () => void
+}
+
+export function ConfirmStep({
+  schedulingDate,
+  onCancelConfirmation,
+}: ConfirmStepProps) {
   const {
     register,
     handleSubmit,
@@ -34,6 +43,9 @@ export function ConfirmStep() {
     console.log(data)
   }
 
+  const describedDate = dayjs(schedulingDate).format('DD[ de ]MMMM[ de ]YYYY')
+  const describedTime = dayjs(schedulingDate).format('HH:mm[h]')
+
   return (
     <form
       onSubmit={handleSubmit(handleConfirmScheduling)}
@@ -42,11 +54,11 @@ export function ConfirmStep() {
       <div className='flex items-center gap-4 pb-6 mb-2 border-b border-gray-600'>
         <span className='flex items-center gap-2 text-gray-300'>
           <CalendarBlank className='text-gray-200 w-5 h-5' />
-          22 de Setembro de 2022
+          {describedDate}
         </span>
         <span className='flex items-center gap-2 text-gray-300'>
           <Clock className='text-gray-200 w-5 h-5' />
-          18:00h
+          {describedTime}
         </span>
       </div>
 
@@ -87,6 +99,7 @@ export function ConfirmStep() {
       <div className='flex justify-end gap-2 mt-2'>
         <button 
           type='button'
+          onClick={onCancelConfirmation}
           className='px-6 py-3 border border-gray-600 text-gray-200 rounded-md hover:bg-gray-800 transition-colors'
         >
           Cancelar

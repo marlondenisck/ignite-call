@@ -13,7 +13,11 @@ interface Availability {
   availableTimes: number[]
 }
 
-export function CalendarStep() {
+interface CalendarStepProps {
+  onSelectDateTime: (date: Date) => void
+}
+
+export function CalendarStep({ onSelectDateTime }: CalendarStepProps) {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
 
   const params = useParams()
@@ -45,6 +49,16 @@ const selectedDateWithoutTime = selectedDate
   })
 
 
+  function handleSelectTime(hour: number) {
+    const dateWithTime = dayjs(selectedDate)
+      .set('hour', hour)
+      .startOf('hour')
+      .toDate()
+
+    onSelectDateTime(dateWithTime)
+  }
+
+
   return (
     <div 
       className={`relative mx-auto mt-6 grid p-0 ${
@@ -65,7 +79,8 @@ const selectedDateWithoutTime = selectedDate
             {availability?.possibleTimes.map((hour) => {
               return (
                 <button 
-                  key={hour} 
+                  key={hour}
+                  onClick={() => handleSelectTime(hour)}
                   className='cursor-pointer rounded-sm border-0 bg-gray-600 px-0 py-2 text-sm leading-6 text-gray-100 last:mb-6 hover:bg-gray-500 focus:shadow-[0_0_0_2px_#e1e1e6] disabled:cursor-default disabled:bg-transparent disabled:opacity-40'
                   disabled={!availability.availableTimes.includes(hour)}
                 >
